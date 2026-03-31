@@ -241,6 +241,133 @@ img{display:block;max-width:100%}
 .qchip:hover{background:rgba(200,160,48,.15);border-color:rgba(200,160,48,.35);color:var(--champagne);transform:translateX(6px)}
 .qchip i{color:var(--gold);font-size:16px;width:20px}
 
+
+/* ════════════════════════════════════
+   QUIZ SECTION
+   ════════════════════════════════════ */
+.quiz-section { background: var(--parchment); }
+.quiz-card {
+  background: var(--forest);
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  min-height: 480px;
+}
+@media (max-width: 960px) {
+  .quiz-card { grid-template-columns: 1fr; }
+  .quiz-visual { display: none; }
+}
+
+.quiz-card::before {
+  content: '';
+  position: absolute;
+  top: -80px; left: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,168,75,0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.quiz-body {
+  padding: 70px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+.quiz-body .eyebrow { color: var(--champagne); }
+.quiz-body .eyebrow::before { background: var(--gold); }
+.quiz-title {
+  font-family: var(--font-serif);
+  font-size: clamp(36px, 4vw, 52px);
+  font-weight: 300;
+  line-height: 1.1;
+  color: #fff;
+  margin: 16px 0 18px;
+}
+.quiz-title em { color: var(--champagne); font-style: italic; }
+.quiz-desc {
+  font-size: 15px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 460px;
+}
+.quiz-steps {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.quiz-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.6);
+}
+.quiz-step-num {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(200,168,75,0.2);
+  border: 1px solid rgba(200,168,75,0.4);
+  color: var(--champagne);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.quiz-visual {
+  position: relative;
+  overflow: hidden;
+}
+.quiz-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, var(--forest), transparent);
+  z-index: 1;
+}
+.quiz-visual img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.quiz-skin-types {
+  position: absolute;
+  inset: 0; z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px;
+  gap: 12px;
+}
+.quiz-skin-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 14px 18px;
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.quiz-skin-chip:hover {
+  background: rgba(200,168,75,0.15);
+  border-color: rgba(200,168,75,0.35);
+  color: var(--champagne);
+}
+.quiz-skin-chip i { color: var(--gold); font-size: 16px; width: 20px; }
+
+
+
 /* ════════ TESTIMONIALS ════════ */
 .testimonials{background:var(--cream)}
 .testi__hd{text-align:center;margin-bottom:56px}
@@ -427,7 +554,7 @@ img{display:block;max-width:100%}
     {% for product in featured %}
     <div class="pc reveal d{{ forloop.counter|divisibleby:4|yesno:'4,,' }}" data-featured="true" data-bestseller="{{ product.is_bestseller|lower }}" data-new="{{ product.is_new_arrival|lower }}">
       <div class="pc__iw">
-        {% if product.image %}<img class="pc__img" src="{{ product.get_image_url }}" alt="{{ product.name }}" loading="lazy">{% else %}<div class="pc__ph"><i class="fas fa-leaf"></i></div>{% endif %}
+        {% if product.image %}<img class="pc__img" src="{{ product.image }}" alt="{{ product.name }}" loading="lazy">{% else %}<div class="pc__ph"><i class="fas fa-leaf"></i></div>{% endif %}
         <div class="pc__bdg">
           {% if product.is_new_arrival %}<span class="badge badge--new">New</span>{% endif %}
           {% if product.is_bestseller %}<span class="badge badge--hot">Hot</span>{% endif %}
@@ -483,32 +610,52 @@ img{display:block;max-width:100%}
   </div>
 </div></section>
 
-<!-- QUIZ -->
-<section class="section quiz"><div class="container">
-  <div class="quiz__card reveal">
-    <div class="qbd">
-      <div class="qbd__ey">Free · 2 Minutes · AI-Powered</div>
-      <h2 class="qbd__ttl">Not Sure What Your<br>Skin <em>Needs?</em></h2>
-      <p class="qbd__p">Take our personalised skin quiz and receive a custom skincare routine matched to your unique skin type, tone and concerns.</p>
-      <div class="qsteps">
-        <div class="qstep"><div class="qstep__n">1</div> Answer 8 quick questions</div>
-        <div class="qstep"><div class="qstep__n">2</div> Get your skin profile</div>
-        <div class="qstep"><div class="qstep__n">3</div> Shop your routine</div>
+<!-- ══════════════════════════════════════════
+     SKIN QUIZ
+     ══════════════════════════════════════════ -->
+<section class="section quiz-section">
+  <div class="container">
+    <div class="quiz-card reveal">
+      <div class="quiz-body">
+        <div class="eyebrow">Free · 2 Minutes · AI-Powered</div>
+        <h2 class="quiz-title">Not Sure What<br>Your Skin <em>Needs?</em></h2>
+        <p class="quiz-desc">
+          Take our personalised skin quiz and receive a custom skincare routine matched to your unique skin type, tone, and concerns.
+        </p>
+        <div class="quiz-steps">
+          <div class="quiz-step">
+            <div class="quiz-step-num">1</div>
+            <span>Answer 8 quick questions</span>
+          </div>
+          <div class="quiz-step">
+            <div class="quiz-step-num">2</div>
+            <span>Get your skin profile</span>
+          </div>
+          <div class="quiz-step">
+            <div class="quiz-step-num">3</div>
+            <span>Shop your routine</span>
+          </div>
+        </div>
+        <a href="{% url 'skin_quiz' %}" class="btn-primary">
+          Start Free Quiz <i class="fas fa-arrow-right"></i>
+        </a>
       </div>
-      <a href="{% url 'skin_quiz' %}" class="btn-gold">Start Free Quiz <i class="fas fa-arrow-right"></i></a>
-    </div>
-    <div class="qvis">
-      <img src="https://images.unsplash.com/photo-1556228841-a3c527ebefe5?w=600&q=80" alt="Skin quiz">
-      <div class="qchips">
-        <div class="qchip"><i class="fas fa-tint"></i> Oily Skin</div>
-        <div class="qchip"><i class="fas fa-wind"></i> Dry Skin</div>
-        <div class="qchip"><i class="fas fa-adjust"></i> Combination Skin</div>
-        <div class="qchip"><i class="fas fa-feather"></i> Sensitive Skin</div>
-        <div class="qchip"><i class="fas fa-star"></i> Normal Skin</div>
+      <div class="quiz-visual">
+        <img src="https://danglifestyle.co/wp-content/uploads/2024/11/Dark-Skinned-Lady-holding-3-products.webp" alt="Skin quiz">
+        <div class="quiz-skin-types">
+          <div class="quiz-skin-chip"><i class="fas fa-tint"></i> Oily Skin</div>
+          <div class="quiz-skin-chip"><i class="fas fa-wind"></i> Dry Skin</div>
+          <div class="quiz-skin-chip"><i class="fas fa-adjust"></i> Combination Skin</div>
+          <div class="quiz-skin-chip"><i class="fas fa-feather"></i> Sensitive Skin</div>
+          <div class="quiz-skin-chip"><i class="fas fa-star"></i> Normal Skin</div>
+        </div>
       </div>
     </div>
   </div>
-</div></section>
+</section>
+
+
+
 
 
 <!-- SERVICES -->
