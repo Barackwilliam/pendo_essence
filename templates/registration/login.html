@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — Pendo Essence{% endblock %}
+{% block meta_description %}Sign in to your Pendo Essence account to track orders, save favourites and manage your skincare routine.{% endblock %}
+
+{% block content %}
+<style>
+    .auth-wrap {
+        min-height: calc(100vh - var(--nav-h, 72px));
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: var(--warm, #fdf9f4);
+    }
+
+    /* ── Left panel (decorative) ── */
+    .auth-panel {
+        background: linear-gradient(160deg, var(--g800, #0d2818) 0%, var(--g600, #1e4f30) 60%, var(--moss, #4a7c59) 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 60px 56px;
+        position: relative;
+        overflow: hidden;
+    }
+    .auth-panel::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 60% 50% at 20% 80%, rgba(201,167,84,.18) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 40% at 80% 10%, rgba(90,185,109,.12) 0%, transparent 50%);
+    }
+    .panel-brand {
+        position: relative;
+        z-index: 1;
+    }
+    .panel-brand-name {
+        font-family: var(--font-display, 'Fraunces', serif);
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -.01em;
+        margin-bottom: 4px;
+    }
+    .panel-brand-sub {
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .8rem;
+        color: rgba(255,255,255,.55);
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .panel-body {
+        position: relative;
+        z-index: 1;
+    }
+    .panel-headline {
+        font-family: var(--font-display, 'Fraunces', serif);
+        font-size: clamp(2rem, 3vw, 2.8rem);
+        font-weight: 700;
+        line-height: 1.2;
+        color: #fff;
+        margin-bottom: 20px;
+    }
+    .panel-headline em {
+        font-style: italic;
+        color: var(--gold-light, #e6d09a);
+    }
+    .panel-desc {
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .95rem;
+        line-height: 1.7;
+        color: rgba(255,255,255,.7);
+        max-width: 340px;
+    }
+    .panel-features {
+        list-style: none;
+        padding: 0;
+        margin: 28px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    .panel-features li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .875rem;
+        color: rgba(255,255,255,.8);
+    }
+    .panel-features li i {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+        color: var(--gold-light, #e6d09a);
+        flex-shrink: 0;
+    }
+    .panel-footer {
+        position: relative;
+        z-index: 1;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .8rem;
+        color: rgba(255,255,255,.4);
+    }
+
+    /* ── Right panel (form) ── */
+    .auth-form-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 40px;
+    }
+    .auth-form-inner {
+        width: 100%;
+        max-width: 420px;
+    }
+    .auth-form-title {
+        font-family: var(--font-head, 'Syne', sans-serif);
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--ink, #0d1a10);
+        margin-bottom: 6px;
+    }
+    .auth-form-subtitle {
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .9rem;
+        color: var(--muted, #5a7060);
+        margin-bottom: 36px;
+    }
+    .auth-form-subtitle a {
+        color: var(--g500, #256b3f);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .auth-form-subtitle a:hover { text-decoration: underline; }
+
+    /* Messages */
+    .auth-messages {
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .auth-msg {
+        padding: 12px 16px;
+        border-radius: var(--radius-sm, 10px);
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .875rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .auth-msg.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .auth-msg.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .auth-msg.info    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    /* Form fields */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-label {
+        display: block;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--text, #1a2e1e);
+        margin-bottom: 8px;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+    .form-control {
+        width: 100%;
+        padding: 13px 16px;
+        border: 1.5px solid var(--border, #daeade);
+        border-radius: var(--radius-sm, 10px);
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .95rem;
+        color: var(--ink, #0d1a10);
+        background: #fff;
+        transition: border-color .2s, box-shadow .2s;
+        outline: none;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        border-color: var(--g500, #256b3f);
+        box-shadow: 0 0 0 3px rgba(37,107,63,.1);
+    }
+    .form-control::placeholder { color: #aab8ac; }
+
+    /* Password wrapper */
+    .pw-wrap {
+        position: relative;
+    }
+    .pw-toggle {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--muted, #5a7060);
+        padding: 4px;
+        font-size: .9rem;
+        transition: color .2s;
+    }
+    .pw-toggle:hover { color: var(--g500, #256b3f); }
+
+    /* Forgot link */
+    .forgot-link {
+        display: block;
+        text-align: right;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .82rem;
+        color: var(--g500, #256b3f);
+        text-decoration: none;
+        margin-top: -12px;
+        margin-bottom: 28px;
+        font-weight: 500;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    /* Submit button */
+    .btn-signin {
+        width: 100%;
+        padding: 14px 24px;
+        background: linear-gradient(135deg, var(--g700, #133520), var(--g500, #256b3f));
+        color: #fff;
+        font-family: var(--font-head, 'Syne', sans-serif);
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: var(--radius-sm, 10px);
+        cursor: pointer;
+        transition: opacity .2s, transform .15s;
+        letter-spacing: .02em;
+    }
+    .btn-signin:hover  { opacity: .9; transform: translateY(-1px); }
+    .btn-signin:active { transform: translateY(0); }
+
+    /* Divider */
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 28px 0;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .8rem;
+        color: var(--muted, #5a7060);
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border, #daeade);
+    }
+
+    /* Register link */
+    .auth-alt {
+        text-align: center;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+        font-size: .9rem;
+        color: var(--muted, #5a7060);
+    }
+    .auth-alt a {
+        color: var(--g500, #256b3f);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .auth-alt a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+        .auth-wrap {
+            grid-template-columns: 1fr;
+        }
+        .auth-panel {
+            display: none;
+        }
+        .auth-form-wrap {
+            padding: 40px 24px;
+            min-height: calc(100vh - var(--nav-h, 72px));
+        }
+    }
+</style>
+
+<div class="auth-wrap">
+
+    <!-- Left decorative panel -->
+    <div class="auth-panel">
+        <div class="panel-brand">
+            <div class="panel-brand-name">Pendo Essence</div>
+            <div class="panel-brand-sub">Stay Natural, Stay Beautiful</div>
+        </div>
+
+        <div class="panel-body">
+            <h2 class="panel-headline">Your skin deserves<br><em>the very best.</em></h2>
+            <p class="panel-desc">
+                Sign in to track your orders, save your favourite products and get personalised skincare recommendations.
+            </p>
+            <ul class="panel-features">
+                <li><i class="fa-solid fa-box"></i> Track your orders in real time</li>
+                <li><i class="fa-solid fa-heart"></i> Save products to your wishlist</li>
+                <li><i class="fa-solid fa-sparkles"></i> Get personalised skin quiz results</li>
+                <li><i class="fa-solid fa-tag"></i> Exclusive member discounts & offers</li>
+            </ul>
+        </div>
+
+        <div class="panel-footer">
+            &copy; {{ 2026 }} Pendo Essence · Tanzania
+        </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-form-wrap">
+        <div class="auth-form-inner">
+
+            <h1 class="auth-form-title">Welcome back</h1>
+            <p class="auth-form-subtitle">
+                Don't have an account?
+                <a href="{% url 'register' %}">Create one free</a>
+            </p>
+
+            <!-- Django messages -->
+            {% if messages %}
+            <div class="auth-messages">
+                {% for message in messages %}
+                <div class="auth-msg {{ message.tags }}">
+                    <i class="fa-solid {% if message.tags == 'error' %}fa-circle-xmark{% elif message.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Form errors -->
+            {% if form.errors %}
+            <div class="auth-messages">
+                <div class="auth-msg error">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    Incorrect username or password. Please try again.
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Next redirect -->
+                {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label" for="id_username">Username</label>
+                    <input
+                        type="text"
+                        name="username"
+                        id="id_username"
+                        class="form-control"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        required
+                        value="{{ form.username.value|default:'' }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_password">Password</label>
+                    <div class="pw-wrap">
+                        <input
+                            type="password"
+                            name="password"
+                            id="id_password"
+                            class="form-control"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                        >
+                        <button type="button" class="pw-toggle" onclick="togglePw()" aria-label="Show/hide password">
+                            <i class="fa-regular fa-eye" id="pw-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <a href="{% url 'password_reset' %}" class="forgot-link">Forgot password?</a>
+
+                <button type="submit" class="btn-signin">
+                    <i class="fa-solid fa-arrow-right-to-bracket" style="margin-right:8px;"></i>
+                    Sign In
+                </button>
+            </form>
+
+            <div class="auth-divider">or</div>
+
+            <div class="auth-alt">
+                New to Pendo Essence?
+                <a href="{% url 'register' %}">Create your free account</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePw() {
+    const input = document.getElementById('id_password');
+    const icon  = document.getElementById('pw-icon');
+    const show  = input.type === 'password';
+    input.type  = show ? 'text' : 'password';
+    icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+}
+</script>
+{% endblock %}

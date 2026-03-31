@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ─── SECURITY ────────────────────────────────────────────────────────────────
 SECRET_KEY = os.environ.get('SECRET_KEY', 'pendo-essence-change-this-in-production')
 
-DEBUG = 'True'
+DEBUG = 'False'
 
 ALLOWED_HOSTS = [
     '*',
