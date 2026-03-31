@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Shop — Pendo Essence{% endblock %}
+
+{% block content %}
+<div class="shop-layout">
+    
+    <!-- ── Shop Header ── -->
+    <div class="shop-hero">
+        <div class="container">
+            <div class="shop-hero-inner">
+                <div>
+                    <p class="section-eyebrow" style="justify-content:flex-start;color:rgba(255,255,255,0.7);">
+                        Natural Skincare
+                    </p>
+                    <h1 style="font-family:var(--font-display);font-size:clamp(36px,5vw,64px);color:white;line-height:1.1;">
+                        {% if selected_category %}{{ selected_category.name }}{% else %}All <em>Products</em>{% endif %}
+                    </h1>
+                    <p style="color:rgba(255,255,255,0.7);margin-top:8px;">{{ total_count }} products</p>
+                </div>
+                <form class="shop-search-form" action="" method="GET">
+                    <div class="shop-search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="q" value="{{ q }}" placeholder="Search products...">
+                        <button type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="shop-content">
+            
+            <!-- ── Sidebar ── -->
+            <aside class="shop-sidebar">
+                <div class="filter-section">
+                    <h3 class="filter-title">Categories</h3>
+                    <ul class="filter-list">
+                        <li>
+                            <a href="{% url 'shop' %}" class="filter-link {% if not selected_category %}active{% endif %}">
+                                All Products
+                            </a>
+                        </li>
+                        {% for cat in categories %}
+                        <li>
+                            <a href="{% url 'category_detail' cat.slug %}" 
+                               class="filter-link {% if selected_category.slug == cat.slug %}active{% endif %}">
+                                {{ cat.name }}
+                                <span class="filter-count">{{ cat.product_count }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="filter-section">
+                    <h3 class="filter-title">Skin Type</h3>
+                    <form method="GET" id="filter-form">
+                        <input type="hidden" name="q" value="{{ q }}">
+                        <input type="hidden" name="sort" value="{{ sort }}">
+                        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category.slug }}">{% endif %}
+                        <ul class="filter-list">
+                            {% for value, label in skin_types %}
+                            <li>
+                                <label class="filter-check">
+                                    <input type="radio" name="skin_type" value="{{ value }}" 
+                                           {% if skin_type == value %}checked{% endif %}
+                                           onchange="document.getElementById('filter-form').submit()">
+                                    {{ label }}
+                                </label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </form>
+                </div>
+                
+                <div class="filter-section">
+                    <h3 class="filter-title">Quick Filters</h3>
+                    <div class="quick-filters">
+                        <a href="{% url 'shop' %}?q={{ q }}&sort=newest" 
+                           class="quick-filter {% if sort == 'newest' %}active{% endif %}">New Arrivals</a>
+                        <a href="{% url 'shop' %}?q={{ q }}&sort=popular" 
+                           class="quick-filter {% if sort == 'popular' %}active{% endif %}">Popular</a>
+                        <a href="{% url 'shop' %}?q={{ q }}&natural=1" 
+                           class="quick-filter">100% Natural</a>
+                    </div>
+                </div>
+                
+                <!-- Skin Quiz CTA -->
+                <div class="sidebar-quiz-cta">
+                    <i class="fas fa-magic"></i>
+                    <h4>Not sure what to buy?</h4>
+                    <p>Take our free skin quiz for personalized recommendations.</p>
+                    <a href="{% url 'skin_quiz' %}" class="btn btn-primary btn-sm" style="margin-top:12px;width:100%;justify-content:center;">
+                        Take Skin Quiz
+                    </a>
+                </div>
+            </aside>
+            
+            <!-- ── Products ── -->
+            <div class="shop-products">
+                <!-- Sort Bar -->
+                <div class="sort-bar">
+                    <span class="sort-count">Showing {{ products.start_index }}–{{ products.end_index }} of {{ total_count }} results</span>
+                    <div class="sort-controls">
+                        <label for="sort-select" style="font-size:13px;color:var(--text-light);">Sort by:</label>
+                        <select id="sort-select" class="sort-select" onchange="window.location.href=this.value">
+                            <option value="?sort=newest{% if q %}&q={{ q }}{% endif %}" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+                            <option value="?sort=popular{% if q %}&q={{ q }}{% endif %}" {% if sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                            <option value="?sort=price_low{% if q %}&q={{ q }}{% endif %}" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="?sort=price_high{% if q %}&q={{ q }}{% endif %}" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="?sort=name{% if q %}&q={{ q }}{% endif %}" {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+                        </select>
+                        <button class="grid-toggle" id="grid-toggle" onclick="toggleGrid()" title="Toggle grid">
+                            <i class="fas fa-th" id="grid-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                {% if products %}
+                <div class="products-grid" id="products-grid">
+                    {% for product in products %}
+                    {% include 'store/partials/product_card.html' %}
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if products.has_other_pages %}
+                <div class="pagination">
+                    {% if products.has_previous %}
+                    <a href="?page={{ products.previous_page_number }}&sort={{ sort }}&q={{ q }}" class="page-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% for num in products.paginator.page_range %}
+                        {% if products.number == num %}
+                        <span class="page-btn active">{{ num }}</span>
+                        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <a href="?page={{ num }}&sort={{ sort }}&q={{ q }}" class="page-btn">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if products.has_next %}
+                    <a href="?page={{ products.next_page_number }}&sort={{ sort }}&q={{ q }}" class="page-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h3>No products found</h3>
+                    <p>Try adjusting your filters or search terms.</p>
+                    <a href="{% url 'shop' %}" class="btn btn-outline" style="margin-top:20px;">Clear Filters</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.shop-hero {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%);
+    padding: 60px 0 40px;
+}
+.shop-hero-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+.shop-search-form { flex: 0 0 400px; }
+.shop-search-box {
+    background: white;
+    border-radius: 50px;
+    padding: 4px 4px 4px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.shop-search-box i { color: var(--text-light); }
+.shop-search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    background: transparent;
+}
+.shop-search-box button {
+    background: var(--forest);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+}
+.shop-content {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 40px;
+    padding: 40px 0 80px;
+}
+.shop-sidebar { /* Sidebar */}
+.filter-section {
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+}
+.filter-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 16px;
+}
+.filter-list { list-style: none; }
+.filter-list li { margin-bottom: 6px; }
+.filter-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--text);
+    transition: var(--transition);
+}
+.filter-link:hover, .filter-link.active {
+    background: var(--cream);
+    color: var(--forest);
+    font-weight: 600;
+}
+.filter-count {
+    font-size: 11px;
+    background: var(--cream);
+    color: var(--text-light);
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.filter-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px 0;
+}
+.quick-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.quick-filter {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: var(--cream);
+    color: var(--text);
+    transition: var(--transition);
+    font-weight: 500;
+}
+.quick-filter:hover, .quick-filter.active {
+    background: var(--forest);
+    color: white;
+}
+.sidebar-quiz-cta {
+    background: linear-gradient(135deg, var(--forest), var(--forest-mid));
+    border-radius: var(--radius);
+    padding: 24px;
+    color: white;
+    text-align: center;
+}
+.sidebar-quiz-cta i { font-size: 32px; color: var(--gold-light); margin-bottom: 12px; display: block; }
+.sidebar-quiz-cta h4 { font-size: 16px; margin-bottom: 8px; }
+.sidebar-quiz-cta p { font-size: 13px; opacity: 0.75; }
+
+.sort-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.sort-count { font-size: 14px; color: var(--text-light); }
+.sort-controls { display: flex; align-items: center; gap: 12px; }
+.sort-select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+.grid-toggle {
+    width: 38px; height: 38px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    transition: var(--transition);
+}
+.grid-toggle:hover { border-color: var(--forest); color: var(--forest); }
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 48px;
+    flex-wrap: wrap;
+}
+.page-btn {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    transition: var(--transition);
+}
+.page-btn:hover, .page-btn.active {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-light);
+}
+.empty-state i { font-size: 48px; margin-bottom: 20px; display: block; }
+.empty-state h3 { font-size: 22px; margin-bottom: 8px; color: var(--text); }
+
+@media (max-width: 900px) {
+    .shop-content { grid-template-columns: 1fr; }
+    .shop-sidebar { display: none; }
+    .shop-hero-inner { flex-direction: column; }
+    .shop-search-form { flex: none; width: 100%; }
+}
+@media (max-width: 600px) {
+    .sort-bar { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+<script>
+let isListView = false;
+function toggleGrid() {
+    const grid = document.getElementById('products-grid');
+    const icon = document.getElementById('grid-icon');
+    isListView = !isListView;
+    if (isListView) {
+        grid.style.gridTemplateColumns = '1fr';
+        icon.className = 'fas fa-list';
+    } else {
+        grid.style.gridTemplateColumns = '';
+        icon.className = 'fas fa-th';
+    }
+}
+</script>
+{% endblock %}

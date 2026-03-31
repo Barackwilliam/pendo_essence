@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us — Pendo Essence{% endblock %}
+{% block content %}
+
+<div style="background:linear-gradient(135deg,var(--forest) 0%,var(--forest-mid) 100%);padding:80px 0;text-align:center;">
+    <div class="container">
+        <p style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold-light);margin-bottom:14px;">Get In Touch</p>
+        <h1 style="font-family:var(--font-display);font-size:clamp(36px,5vw,64px);color:white;">We'd Love to <em style="color:var(--gold-light);">Hear From You</em></h1>
+        <p style="color:rgba(255,255,255,0.75);font-size:16px;margin-top:14px;">Questions, orders, skincare advice — we're here for you.</p>
+    </div>
+</div>
+
+<div class="container" style="padding:70px 24px;">
+    <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:60px;align-items:flex-start;">
+        <!-- Info -->
+        <div>
+            <h2 style="font-family:var(--font-serif);font-size:28px;margin-bottom:24px;">Contact Information</h2>
+            {% for item in contact_items %}
+            <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:24px;">
+                <div style="width:48px;height:48px;background:#f0f8f5;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--forest);font-size:18px;flex-shrink:0;">
+                    {% if item == "phone" %}<i class="fas fa-phone"></i>
+                    {% elif item == "whatsapp" %}<i class="fab fa-whatsapp"></i>
+                    {% elif item == "email" %}<i class="fas fa-envelope"></i>
+                    {% else %}<i class="fas fa-map-marker-alt"></i>{% endif %}
+                </div>
+                <div>
+                    <h4 style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:4px;">
+                        {% if item == "phone" %}Phone
+                        {% elif item == "whatsapp" %}WhatsApp
+                        {% elif item == "email" %}Email
+                        {% else %}Address{% endif %}
+                    </h4>
+                    <p style="font-size:15px;color:var(--text);">
+                        {% if item == "phone" %}{{ settings.phone|default:"+255 712 345 678" }}
+                        {% elif item == "whatsapp" %}+255 762 229 222
+                        {% elif item == "email" %}{{ settings.email|default:"info@pendoessence.co.tz" }}
+                        {% else %}{{ settings.address|default:"Dar es Salaam, Tanzania" }}{% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div style="background:var(--cream);border-radius:var(--radius-lg);padding:24px;margin-top:24px;">
+                <h4 style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:12px;">Business Hours</h4>
+                <p style="font-size:14px;color:var(--text);">Monday – Friday: 8:00 AM – 6:00 PM</p>
+                <p style="font-size:14px;color:var(--text);">Saturday: 9:00 AM – 4:00 PM</p>
+                <p style="font-size:14px;color:var(--text-light);">Sunday: Closed</p>
+            </div>
+            
+            <div style="margin-top:24px;">
+                <h4 style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:14px;">Follow Us</h4>
+                <div style="display:flex;gap:12px;">
+                    {% if settings.instagram %}<a href="{{ settings.instagram }}" target="_blank" style="width:42px;height:42px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;color:white;font-size:16px;"><i class="fab fa-instagram"></i></a>{% endif %}
+                    {% if settings.facebook %}<a href="{{ settings.facebook }}" target="_blank" style="width:42px;height:42px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;color:white;font-size:16px;"><i class="fab fa-facebook-f"></i></a>{% endif %}
+                    {% if settings.tiktok %}<a href="{{ settings.tiktok }}" target="_blank" style="width:42px;height:42px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;color:white;font-size:16px;"><i class="fab fa-tiktok"></i></a>{% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form -->
+        <div style="background:white;border-radius:var(--radius-lg);padding:40px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
+            <h2 style="font-family:var(--font-serif);font-size:28px;margin-bottom:24px;">Send Us a Message</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div class="form-group"><label>Your Name *</label><input type="text" name="name" required placeholder="Amina Hassan"></div>
+                    <div class="form-group"><label>Email *</label><input type="email" name="email" required placeholder="amina@example.com"></div>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;"><label>Phone</label><input type="tel" name="phone" placeholder="0712 345 678"></div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label>Subject *</label>
+                    <select name="subject" required>
+                        <option value="">Select a topic</option>
+                        <option>Product Inquiry</option>
+                        <option>Order Help</option>
+                        <option>Skin Consultation</option>
+                        <option>Wholesale / Partnership</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:24px;"><label>Message *</label><textarea name="message" rows="5" required placeholder="Tell us how we can help..."></textarea></div>
+                <button type="submit" class="btn btn-primary btn-lg btn-block">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group{margin-bottom:0}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.form-group input,.form-group select,.form-group textarea{
+    width:100%;border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;
+    font-family:var(--font-sans);font-size:14px;color:var(--text);outline:none;transition:var(--transition);background:white;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--forest);box-shadow:0 0 0 3px rgba(45,74,62,0.08);}
+@media(max-width:768px){
+    [style*="grid-template-columns:1fr 1.5fr"]{grid-template-columns:1fr!important;}
+    [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
+}
+</style>
+{% endblock %}

@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Checkout — Pendo Essence{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:48px;padding-bottom:80px;">
+    <div class="checkout-header">
+        <h1>Secure <em>Checkout</em></h1>
+        <div class="checkout-steps">
+            <div class="step active"><span>1</span> Delivery</div>
+            <div class="step-line"></div>
+            <div class="step"><span>2</span> Payment</div>
+            <div class="step-line"></div>
+            <div class="step"><span>3</span> Confirm</div>
+        </div>
+    </div>
+    
+    <form method="POST" class="checkout-layout">
+        {% csrf_token %}
+        
+        <!-- Left: Form -->
+        <div class="checkout-form">
+            <!-- Delivery Info -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <i class="fas fa-map-marker-alt"></i> Delivery Information
+                </h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" name="first_name" value="{{ user_data.first_name }}" required placeholder="Amina">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" name="last_name" value="{{ user_data.last_name }}" required placeholder="Hassan">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" name="email" value="{{ user_data.email }}" required placeholder="amina@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" name="phone" required placeholder="0712 345 678">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Delivery Address *</label>
+                    <textarea name="address" required rows="2" placeholder="Street, Building, Area..."></textarea>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>City *</label>
+                        <select name="city" required>
+                            <option value="">Select City</option>
+                            <option value="Dar es Salaam" selected>Dar es Salaam</option>
+                            <option value="Mwanza">Mwanza</option>
+                            <option value="Arusha">Arusha</option>
+                            <option value="Dodoma">Dodoma</option>
+                            <option value="Mbeya">Mbeya</option>
+                            <option value="Morogoro">Morogoro</option>
+                            <option value="Zanzibar">Zanzibar</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Region</label>
+                        <input type="text" name="region" placeholder="e.g., Kinondoni">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Delivery Notes</label>
+                    <textarea name="delivery_notes" rows="2" placeholder="Any special instructions for delivery..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Payment Method -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <i class="fas fa-credit-card"></i> Payment Method
+                </h3>
+                <div class="payment-methods">
+                    <label class="payment-method active" id="pm-mpesa">
+                        <input type="radio" name="payment_method" value="mpesa" checked onchange="showPaymentFields('mpesa')">
+                        <div class="pm-icon mpesa">M</div>
+                        <div class="pm-info">
+                            <b>M-Pesa</b>
+                            <span>Vodacom M-Pesa</span>
+                        </div>
+                    </label>
+                    <label class="payment-method" id="pm-tigo">
+                        <input type="radio" name="payment_method" value="tigo" onchange="showPaymentFields('tigo')">
+                        <div class="pm-icon tigo">T</div>
+                        <div class="pm-info">
+                            <b>Tigo Pesa</b>
+                            <span>Tigo Mobile Money</span>
+                        </div>
+                    </label>
+                    <label class="payment-method" id="pm-airtel">
+                        <input type="radio" name="payment_method" value="airtel" onchange="showPaymentFields('airtel')">
+                        <div class="pm-icon airtel">A</div>
+                        <div class="pm-info">
+                            <b>Airtel Money</b>
+                            <span>Airtel Mobile Money</span>
+                        </div>
+                    </label>
+                    <label class="payment-method" id="pm-cash">
+                        <input type="radio" name="payment_method" value="cash" onchange="showPaymentFields('cash')">
+                        <div class="pm-icon cash"><i class="fas fa-money-bill"></i></div>
+                        <div class="pm-info">
+                            <b>Cash on Delivery</b>
+                            <span>Pay when delivered</span>
+                        </div>
+                    </label>
+                </div>
+                
+                <div id="mpesa-fields" class="payment-fields">
+                    <div class="payment-instruction">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Send payment to <strong>+255 712 345 678</strong> (Pendo Essence). Enter your M-Pesa transaction reference below.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>M-Pesa Transaction Reference</label>
+                        <input type="text" name="payment_reference" placeholder="e.g., QAH7XNHZKE">
+                    </div>
+                </div>
+                
+                <div id="cash-fields" class="payment-fields" style="display:none;">
+                    <div class="payment-instruction">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Our delivery agent will collect payment when your order is delivered. Please have the exact amount ready.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right: Order Summary -->
+        <div class="checkout-summary">
+            <div class="summary-box">
+                <h3 class="summary-title">Order Summary</h3>
+                <div class="summary-items">
+                    {% for item in cart.items.all %}
+                    <div class="summary-item">
+                        <div class="summary-item-img">
+                            {% if item.product.image %}
+                            <img src="{{ item.product.get_image_thumb_url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                            <div style="width:100%;height:100%;background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:20px;">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            {% endif %}
+                            <span class="item-qty-badge">{{ item.quantity }}</span>
+                        </div>
+                        <div class="summary-item-info">
+                            <p class="summary-item-name">{{ item.product.name }}</p>
+                            <p class="summary-item-size">{{ item.product.size }}</p>
+                        </div>
+                        <div class="summary-item-price">TZS {{ item.subtotal|intcomma }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="coupon-field">
+                    <input type="text" name="coupon_code" placeholder="Coupon code">
+                    <button type="button" onclick="showToast('Coupon applied!', 'success')">Apply</button>
+                </div>
+                <div class="summary-totals">
+                    <div class="total-line">
+                        <span>Subtotal</span>
+                        <span>TZS {{ cart.total|intcomma }}</span>
+                    </div>
+                    <div class="total-line">
+                        <span>Delivery</span>
+                        <span>{% if delivery_fee == 0 %}<span style="color:var(--forest);font-weight:700;">FREE</span>{% else %}TZS {{ delivery_fee|intcomma }}{% endif %}</span>
+                    </div>
+                    <div class="total-line grand">
+                        <span>Total</span>
+                        <span>TZS {{ grand_total|intcomma }}</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg btn-block">
+                    <i class="fas fa-lock"></i> Place Order
+                </button>
+                <p style="text-align:center;font-size:12px;color:var(--text-light);margin-top:12px;">
+                    <i class="fas fa-shield-alt" style="color:var(--forest);margin-right:4px;"></i>
+                    Secure & encrypted checkout
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.checkout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.checkout-header h1 {
+    font-family: var(--font-display);
+    font-size: 40px;
+}
+.checkout-header h1 em { color: var(--forest); font-style: italic; }
+.checkout-steps {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+.step.active { color: var(--forest); font-weight: 700; }
+.step span {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+.step.active span { background: var(--forest); color: white; }
+.step-line { width: 40px; height: 1px; background: var(--border); }
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 40px;
+    align-items: flex-start;
+}
+.form-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+.form-section-title {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--charcoal);
+}
+.form-section-title i { color: var(--forest); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; letter-spacing: 0.3px; }
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: var(--transition);
+    background: white;
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--forest);
+    box-shadow: 0 0 0 3px rgba(45,74,62,0.08);
+}
+.payment-methods { display: flex; flex-direction: column; gap: 12px; }
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.payment-method.active, .payment-method:has(input:checked) {
+    border-color: var(--forest);
+    background: #f0f8f5;
+}
+.payment-method input { display: none; }
+.pm-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    font-size: 18px;
+    color: white;
+    flex-shrink: 0;
+}
+.pm-icon.mpesa { background: #00a550; }
+.pm-icon.tigo { background: #00A4E0; }
+.pm-icon.airtel { background: #FF0000; }
+.pm-icon.cash { background: var(--gold); }
+.pm-info b { display: block; font-size: 14px; }
+.pm-info span { font-size: 12px; color: var(--text-light); }
+.payment-fields { margin-top: 16px; }
+.payment-instruction {
+    background: #f0f8f5;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: var(--forest);
+    margin-bottom: 16px;
+}
+.payment-instruction i { flex-shrink: 0; margin-top: 2px; }
+.summary-box {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 100px;
+}
+.summary-title {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+.summary-items { margin-bottom: 16px; }
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+.summary-item-img {
+    width: 56px; height: 56px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    background: var(--cream);
+}
+.summary-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.item-qty-badge {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: var(--forest);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.summary-item-name { font-size: 13px; font-weight: 600; }
+.summary-item-size { font-size: 11px; color: var(--text-light); }
+.summary-item-price { margin-left: auto; font-size: 14px; font-weight: 600; }
+.coupon-field {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.coupon-field input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    outline: none;
+    font-family: var(--font-sans);
+}
+.coupon-field button {
+    background: none;
+    border: 1px solid var(--forest);
+    color: var(--forest);
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: var(--transition);
+}
+.coupon-field button:hover { background: var(--forest); color: white; }
+.summary-totals { margin-bottom: 20px; }
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+.total-line.grand {
+    font-size: 18px;
+    font-weight: 700;
+    padding-top: 14px;
+    border-bottom: none;
+    color: var(--charcoal);
+}
+@media (max-width: 900px) {
+    .checkout-layout { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .checkout-header { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+<script>
+function showPaymentFields(method) {
+    document.querySelectorAll('.payment-fields').forEach(f => f.style.display = 'none');
+    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+    
+    const field = document.getElementById(`${method}-fields`);
+    if (field) field.style.display = 'block';
+    document.getElementById(`pm-${method}`)?.classList.add('active');
+}
+</script>
+{% endblock %}

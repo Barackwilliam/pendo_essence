@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Your Skin Results — Pendo Essence{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,var(--forest),var(--forest-mid));padding:80px 0;text-align:center;">
+    <div class="container">
+        <div style="width:80px;height:80px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;color:white;animation:pulse-ring 2s infinite;">
+            <i class="fas fa-star"></i>
+        </div>
+        <h1 style="font-family:var(--font-display);font-size:clamp(36px,5vw,60px);color:white;">Your Personalized Routine</h1>
+        <p style="color:rgba(255,255,255,0.75);font-size:17px;margin-top:14px;">
+            Based on your <strong style="color:var(--gold-light);">{{ skin_type }}</strong> skin type
+        </p>
+    </div>
+</div>
+
+<div class="container" style="padding:60px 24px 80px;">
+    
+    <div style="max-width:700px;margin:0 auto 60px;background:white;border-radius:var(--radius-lg);padding:36px;border:1px solid var(--border);text-align:center;">
+        <h2 style="font-family:var(--font-serif);font-size:28px;margin-bottom:14px;">Your Skin Profile</h2>
+        <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+            <div style="background:#f0f8f5;color:var(--forest);font-weight:600;padding:8px 20px;border-radius:30px;font-size:14px;">
+                <i class="fas fa-user-circle"></i> {{ skin_type|capfirst }} Skin
+            </div>
+            {% for concern in concerns %}
+            {% if concern %}
+            <div style="background:var(--cream);color:var(--text);padding:8px 16px;border-radius:30px;font-size:13px;">{{ concern }}</div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <p style="color:var(--text-light);font-size:14px;line-height:1.7;">
+            We've analyzed your skin type and concerns to curate the perfect product recommendations just for you.
+            Start with these essentials and build your routine gradually.
+        </p>
+    </div>
+    
+    {% if recommendations %}
+    <div class="section-header">
+        <p class="section-eyebrow">Curated For You</p>
+        <h2 class="section-title">Recommended <em>Products</em></h2>
+    </div>
+    <div class="products-grid">
+        {% for product in recommendations %}
+        {% include 'store/partials/product_card.html' %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:40px;">
+        <p style="color:var(--text-light);">Loading recommendations... <a href="{% url 'shop' %}" style="color:var(--forest);font-weight:600;">Browse all products →</a></p>
+    </div>
+    {% endif %}
+    
+    <div style="text-align:center;margin-top:48px;padding:40px;background:var(--cream);border-radius:var(--radius-lg);">
+        <h3 style="font-family:var(--font-serif);font-size:24px;margin-bottom:12px;">Want Expert Advice?</h3>
+        <p style="color:var(--text-light);margin-bottom:24px;">Chat with our skincare specialists on WhatsApp for personalized guidance.</p>
+        <a href="https://wa.me/255{{ 762229222 }}?text=Hello! I just completed the skin quiz and need advice." 
+           target="_blank" class="btn btn-primary btn-lg">
+            <i class="fab fa-whatsapp"></i> Chat with a Specialist
+        </a>
+    </div>
+</div>
+{% endblock %}

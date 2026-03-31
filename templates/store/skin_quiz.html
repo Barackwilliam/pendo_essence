@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+
+{% block title %}Free Skin Quiz — Pendo Essence{% endblock %}
+
+{% block content %}
+<div class="quiz-page">
+    <div class="quiz-page-header">
+        <div class="container">
+            <p class="section-eyebrow" style="justify-content:center;color:rgba(255,255,255,0.7);">AI-Powered Analysis</p>
+            <h1 style="font-family:var(--font-display);font-size:clamp(36px,5vw,60px);color:white;text-align:center;line-height:1.1;">
+                Discover Your Perfect<br><em style="color:var(--gold-light);">Skin Routine</em>
+            </h1>
+            <p style="text-align:center;color:rgba(255,255,255,0.7);font-size:16px;margin-top:16px;">
+                Answer 5 simple questions and get personalized product recommendations
+            </p>
+        </div>
+    </div>
+    
+    <div class="container" style="padding-top:60px;padding-bottom:80px;">
+        <div class="quiz-container">
+            <!-- Progress Bar -->
+            <div class="quiz-progress">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill" style="width:20%"></div>
+                </div>
+                <div class="progress-labels">
+                    <span id="step-label">Step 1 of 5</span>
+                    <span id="step-pct">20%</span>
+                </div>
+            </div>
+            
+            <form method="POST" id="quiz-form">
+                {% csrf_token %}
+                
+                <!-- Step 1: Skin Type -->
+                <div class="quiz-step active" id="step-1">
+                    <div class="quiz-step-header">
+                        <div class="quiz-step-num">1</div>
+                        <h2 class="quiz-question">What's your skin type?</h2>
+                        <p class="quiz-hint">Choose the description that sounds most like your skin most days.</p>
+                    </div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="skin_type" value="oily" required>
+                            <div class="option-content">
+                                <div class="option-icon">🌊</div>
+                                <h4>Oily</h4>
+                                <p>Shiny, prone to breakouts, large pores</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="skin_type" value="dry">
+                            <div class="option-content">
+                                <div class="option-icon">🏜️</div>
+                                <h4>Dry</h4>
+                                <p>Tight, flaky, rough texture</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="skin_type" value="combination">
+                            <div class="option-content">
+                                <div class="option-icon">⚖️</div>
+                                <h4>Combination</h4>
+                                <p>Oily T-zone, dry cheeks</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="skin_type" value="sensitive">
+                            <div class="option-content">
+                                <div class="option-icon">🌸</div>
+                                <h4>Sensitive</h4>
+                                <p>Easily irritated, reacts to products</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="skin_type" value="normal">
+                            <div class="option-content">
+                                <div class="option-icon">✨</div>
+                                <h4>Normal</h4>
+                                <p>Balanced, few concerns</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="quiz-nav">
+                        <div></div>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(1)">Next →</button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Concerns -->
+                <div class="quiz-step" id="step-2">
+                    <div class="quiz-step-header">
+                        <div class="quiz-step-num">2</div>
+                        <h2 class="quiz-question">What are your main skin concerns?</h2>
+                        <p class="quiz-hint">Select all that apply.</p>
+                    </div>
+                    <div class="quiz-options grid-3">
+                        {% for concern_item in concern_choices %}
+                        <label class="quiz-option small">
+                            <input type="checkbox" name="concerns" value="{{ concern_item }}">
+                            <div class="option-content">
+                                <h4>{{ concern_item }}</h4>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div class="quiz-nav">
+                        <button type="button" class="btn btn-outline" onclick="prevStep(2)">← Back</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(2)">Next →</button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Routine -->
+                <div class="quiz-step" id="step-3">
+                    <div class="quiz-step-header">
+                        <div class="quiz-step-num">3</div>
+                        <h2 class="quiz-question">What's your current skincare routine?</h2>
+                    </div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="routine" value="none" required>
+                            <div class="option-content">
+                                <div class="option-icon">🆕</div>
+                                <h4>Complete Beginner</h4>
+                                <p>I just wash my face with water or soap</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="routine" value="basic">
+                            <div class="option-content">
+                                <div class="option-icon">🌱</div>
+                                <h4>Basic Routine</h4>
+                                <p>Cleanser and moisturizer only</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="routine" value="moderate">
+                            <div class="option-content">
+                                <div class="option-icon">🔬</div>
+                                <h4>Moderate Routine</h4>
+                                <p>Cleanser, toner, serum, moisturizer</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="routine" value="advanced">
+                            <div class="option-content">
+                                <div class="option-icon">💎</div>
+                                <h4>Advanced Routine</h4>
+                                <p>Multi-step routine with actives</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="quiz-nav">
+                        <button type="button" class="btn btn-outline" onclick="prevStep(3)">← Back</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(3)">Next →</button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Budget -->
+                <div class="quiz-step" id="step-4">
+                    <div class="quiz-step-header">
+                        <div class="quiz-step-num">4</div>
+                        <h2 class="quiz-question">What's your monthly skincare budget?</h2>
+                    </div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="budget" value="low" required>
+                            <div class="option-content">
+                                <div class="option-icon">💚</div>
+                                <h4>Under TZS 30,000</h4>
+                                <p>Affordable essentials</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="budget" value="medium">
+                            <div class="option-content">
+                                <div class="option-icon">💛</div>
+                                <h4>TZS 30,000 – 80,000</h4>
+                                <p>Mid-range products</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="budget" value="high">
+                            <div class="option-content">
+                                <div class="option-icon">💜</div>
+                                <h4>TZS 80,000+</h4>
+                                <p>Premium skincare</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="quiz-nav">
+                        <button type="button" class="btn btn-outline" onclick="prevStep(4)">← Back</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(4)">Next →</button>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Goals -->
+                <div class="quiz-step" id="step-5">
+                    <div class="quiz-step-header">
+                        <div class="quiz-step-num">5</div>
+                        <h2 class="quiz-question">What's your #1 skincare goal?</h2>
+                    </div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="goal" value="clear" required>
+                            <div class="option-content">
+                                <div class="option-icon">✨</div>
+                                <h4>Clear Skin</h4>
+                                <p>Get rid of acne and blemishes</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="goal" value="glow">
+                            <div class="option-content">
+                                <div class="option-icon">🌟</div>
+                                <h4>Glowing Skin</h4>
+                                <p>Bright, radiant, luminous complexion</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="goal" value="hydration">
+                            <div class="option-content">
+                                <div class="option-icon">💧</div>
+                                <h4>Deep Hydration</h4>
+                                <p>Plump, moisturized, supple skin</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="goal" value="even">
+                            <div class="option-content">
+                                <div class="option-icon">🎨</div>
+                                <h4>Even Skin Tone</h4>
+                                <p>Reduce dark spots and discoloration</p>
+                            </div>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="goal" value="anti-aging">
+                            <div class="option-content">
+                                <div class="option-icon">⏰</div>
+                                <h4>Anti-Aging</h4>
+                                <p>Reduce fine lines and maintain youth</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="quiz-nav">
+                        <button type="button" class="btn btn-outline" onclick="prevStep(5)">← Back</button>
+                        <button type="submit" class="btn btn-gold btn-lg">
+                            <i class="fas fa-magic"></i> Get My Results!
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.quiz-page-header {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%);
+    padding: 80px 0;
+    position: relative;
+    overflow: hidden;
+}
+.quiz-page-header::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(201,169,110,0.1);
+}
+.quiz-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.quiz-progress { margin-bottom: 48px; }
+.progress-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--forest), var(--gold));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-light);
+}
+.quiz-step { display: none; }
+.quiz-step.active { display: block; animation: fadeSlide 0.4s ease; }
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.quiz-step-header { text-align: center; margin-bottom: 40px; }
+.quiz-step-num {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--forest), var(--forest-light));
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+}
+.quiz-question {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--charcoal);
+    margin-bottom: 8px;
+}
+.quiz-hint { color: var(--text-light); font-size: 15px; }
+.quiz-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+}
+.quiz-options.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.quiz-option { cursor: pointer; }
+.quiz-option input { display: none; }
+.option-content {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 20px;
+    text-align: center;
+    transition: var(--transition);
+    height: 100%;
+    background: white;
+}
+.quiz-option input:checked + .option-content {
+    border-color: var(--forest);
+    background: #f0f8f5;
+    box-shadow: 0 0 0 3px rgba(45,74,62,0.1);
+}
+.option-content:hover { border-color: var(--forest-light); transform: translateY(-2px); }
+.option-icon { font-size: 36px; margin-bottom: 12px; }
+.option-content h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--charcoal); }
+.option-content p { font-size: 12px; color: var(--text-light); line-height: 1.5; }
+.quiz-option.small .option-content { padding: 16px 14px; }
+.quiz-option.small .option-content h4 { font-size: 13px; }
+.quiz-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+@media (max-width: 600px) {
+    .quiz-options { grid-template-columns: 1fr 1fr; }
+    .quiz-options.grid-3 { grid-template-columns: 1fr 1fr; }
+    .quiz-question { font-size: 22px; }
+}
+</style>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+
+function nextStep(step) {
+    const current = document.getElementById(`step-${step}`);
+    const radios = current.querySelectorAll('input[type="radio"]');
+    const requiredRadios = current.querySelectorAll('input[type="radio"][required]');
+    
+    if (requiredRadios.length > 0) {
+        const names = [...new Set([...requiredRadios].map(r => r.name))];
+        const allFilled = names.every(name => current.querySelector(`input[name="${name}"]:checked`));
+        if (!allFilled) {
+            showToast('Please make a selection to continue.', 'error');
+            return;
+        }
+    }
+    
+    document.getElementById(`step-${step}`).classList.remove('active');
+    document.getElementById(`step-${step + 1}`).classList.add('active');
+    currentStep = step + 1;
+    updateProgress();
+}
+
+function prevStep(step) {
+    document.getElementById(`step-${step}`).classList.remove('active');
+    document.getElementById(`step-${step - 1}`).classList.add('active');
+    currentStep = step - 1;
+    updateProgress();
+}
+
+function updateProgress() {
+    const pct = (currentStep / totalSteps) * 100;
+    document.getElementById('progress-fill').style.width = `${pct}%`;
+    document.getElementById('step-label').textContent = `Step ${currentStep} of ${totalSteps}`;
+    document.getElementById('step-pct').textContent = `${Math.round(pct)}%`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+{% endblock %}

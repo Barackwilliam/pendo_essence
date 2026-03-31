@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Shopping Cart — Pendo Essence{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:48px;padding-bottom:80px;">
+    <h1 style="font-family:var(--font-display);font-size:42px;margin-bottom:8px;">Your <em style="color:var(--forest);font-style:italic;">Cart</em></h1>
+    <p style="color:var(--text-light);margin-bottom:40px;">{{ cart.item_count }} item{{ cart.item_count|pluralize }}</p>
+    
+    {% if items %}
+    <div class="cart-layout">
+        <!-- Items -->
+        <div class="cart-items">
+            {% for item in items %}
+            <div class="cart-item" id="cart-item-{{ item.id }}">
+                <div class="cart-item-img">
+                    {% if item.product.image %}
+                    <img src="{{ item.product.image }}" alt="{{ item.product.name }}">
+                    {% else %}
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--cream);color:var(--gold);font-size:32px;">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="cart-item-info">
+                    <p class="cart-item-category">{{ item.product.category.name }}</p>
+                    <h3 class="cart-item-name">
+                        <a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a>
+                    </h3>
+                    <p class="cart-item-size">{{ item.product.size }}</p>
+                    <p class="cart-item-price">TZS {{ item.product.price|intcomma }}</p>
+                </div>
+                <div class="cart-item-qty">
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="updateQty({{ item.id }}, {{ item.quantity|add:'-1' }})">−</button>
+                        <span class="qty-value" id="qty-{{ item.id }}">{{ item.quantity }}</span>
+                        <button class="qty-btn" onclick="updateQty({{ item.id }}, {{ item.quantity|add:'1' }})">+</button>
+                    </div>
+                </div>
+                <div class="cart-item-subtotal">
+                    <span id="subtotal-{{ item.id }}">TZS {{ item.subtotal|intcomma }}</span>
+                </div>
+                <button class="cart-remove" onclick="removeItem({{ item.id }})" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Summary -->
+        <div class="cart-summary">
+            <h3 class="summary-title">Order Summary</h3>
+            
+            <!-- Coupon -->
+            <div class="coupon-form">
+                <input type="text" id="coupon-input" placeholder="Coupon code" class="coupon-input">
+                <button class="btn btn-outline btn-sm" onclick="applyCoupon()">Apply</button>
+            </div>
+            
+            <div class="summary-lines">
+                <div class="summary-line">
+                    <span>Subtotal</span>
+                    <span id="cart-total">TZS {{ cart.total|intcomma }}</span>
+                </div>
+                <div class="summary-line">
+                    <span>Delivery</span>
+                    <span>
+                        {% if delivery_fee == 0 %}
+                        <span style="color:var(--forest);font-weight:600;">FREE</span>
+                        {% else %}
+                        TZS {{ delivery_fee|intcomma }}
+                        {% endif %}
+                    </span>
+                </div>
+                {% if cart.total < free_threshold %}
+                <div class="free-delivery-hint">
+                    <i class="fas fa-truck"></i>
+                    Add TZS {{ free_threshold|intcomma|add:"-"|add:cart.total|intcomma }} more for free delivery!
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="summary-total">
+                <span>Total</span>
+                <span class="total-amount">TZS {{ grand_total|intcomma }}</span>
+            </div>
+            
+            <a href="{% url 'checkout' %}" class="btn btn-primary btn-lg btn-block" style="margin-top:20px;">
+                <i class="fas fa-lock"></i> Proceed to Checkout
+            </a>
+            <a href="{% url 'shop' %}" class="btn btn-outline btn-sm btn-block" style="margin-top:12px;">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+            
+            <!-- Payment icons -->
+            <div style="margin-top:24px;text-align:center;">
+                <p style="font-size:11px;color:var(--text-light);margin-bottom:10px;">Secure Payment Options</p>
+                <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
+                    <span class="payment-badge">M-PESA</span>
+                    <span class="payment-badge">TIGO PESA</span>
+                    <span class="payment-badge">AIRTEL</span>
+                    <span class="payment-badge">COD</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-cart">
+        <div class="empty-cart-icon"><i class="fas fa-shopping-bag"></i></div>
+        <h2>Your cart is empty</h2>
+        <p>Add some products to start your skincare journey!</p>
+        <a href="{% url 'shop' %}" class="btn btn-primary btn-lg" style="margin-top:24px;">
+            <i class="fas fa-leaf"></i> Shop Now
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 40px;
+    align-items: flex-start;
+}
+.cart-items { display: flex; flex-direction: column; gap: 16px; }
+.cart-item {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 90px 1fr auto auto auto;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid var(--border);
+    transition: var(--transition);
+}
+.cart-item:hover { box-shadow: var(--shadow-sm); }
+.cart-item-img {
+    width: 90px; height: 90px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.cart-item-category { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-dark); }
+.cart-item-name { font-family: var(--font-serif); font-size: 16px; font-weight: 600; margin: 4px 0; }
+.cart-item-name a { color: var(--charcoal); }
+.cart-item-name a:hover { color: var(--forest); }
+.cart-item-size { font-size: 12px; color: var(--text-light); }
+.cart-item-price { font-weight: 600; color: var(--forest); font-size: 15px; margin-top: 4px; }
+.qty-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    overflow: hidden;
+}
+.qty-btn {
+    background: none;
+    border: none;
+    width: 36px; height: 36px;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text);
+    transition: var(--transition);
+}
+.qty-btn:hover { background: var(--cream); }
+.qty-value { font-weight: 600; font-size: 15px; min-width: 30px; text-align: center; }
+.cart-item-subtotal { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--charcoal); text-align: right; min-width: 120px; }
+.cart-remove {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    background: none;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: var(--transition);
+    font-size: 13px;
+}
+.cart-remove:hover { background: #fee; border-color: var(--terracotta); color: var(--terracotta); }
+.cart-summary {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 100px;
+}
+.summary-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+.coupon-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.coupon-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    outline: none;
+}
+.coupon-input:focus { border-color: var(--forest); }
+.summary-lines { margin-bottom: 20px; }
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.free-delivery-hint {
+    background: #f0f8f5;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--forest);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0 0;
+    font-weight: 700;
+}
+.total-amount {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    color: var(--forest);
+}
+.payment-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    background: var(--cream);
+    border-radius: 4px;
+    color: var(--text-light);
+}
+.empty-cart {
+    text-align: center;
+    padding: 100px 20px;
+}
+.empty-cart-icon {
+    font-size: 72px;
+    color: var(--gold-light);
+    margin-bottom: 24px;
+}
+.empty-cart h2 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+.empty-cart p { color: var(--text-light); font-size: 16px; }
+@media (max-width: 900px) {
+    .cart-layout { grid-template-columns: 1fr; }
+    .cart-item { grid-template-columns: 80px 1fr; grid-template-rows: auto auto; }
+    .cart-item-subtotal, .qty-control, .cart-remove { grid-column: 2; }
+}
+@media (max-width: 480px) {
+    .cart-item { grid-template-columns: 70px 1fr; gap: 12px; }
+}
+</style>
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+function updateQty(itemId, newQty) {
+    if (newQty < 0) return;
+    fetch(`/cart/update/${itemId}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken },
+        body: `quantity=${newQty}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (newQty === 0) {
+                document.getElementById(`cart-item-${itemId}`)?.remove();
+            } else {
+                document.getElementById(`qty-${itemId}`).textContent = newQty;
+                document.getElementById(`subtotal-${itemId}`).textContent = `TZS ${formatNum(parseFloat(data.subtotal))}`;
+                document.getElementById('cart-total').textContent = `TZS ${formatNum(parseFloat(data.cart_total))}`;
+            }
+            const badge = document.getElementById('cart-count');
+            if (badge) badge.textContent = data.cart_count;
+        }
+    });
+}
+
+function removeItem(itemId) {
+    fetch(`/cart/remove/${itemId}/`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById(`cart-item-${itemId}`)?.remove();
+            const badge = document.getElementById('cart-count');
+            if (badge) badge.textContent = data.cart_count;
+        }
+    });
+}
+
+function formatNum(n) {
+    return n.toLocaleString('en-US', {minimumFractionDigits: 2});
+}
+
+function applyCoupon() {
+    const code = document.getElementById('coupon-input').value;
+    showToast(`Coupon "${code}" applied!`, 'success');
+}
+</script>
+{% endblock %}

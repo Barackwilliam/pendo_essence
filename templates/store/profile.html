@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}My Profile — Pendo Essence{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, var(--forest, #1a4a36), #2d5a43);
+        --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --input-bg: #f9fbf9;
+    }
+
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px 100px;
+    }
+
+    .profile-layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 40px;
+        align-items: start;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar-sticky {
+        position: sticky;
+        top: 30px;
+    }
+
+    .user-profile-header {
+        background: var(--primary-gradient);
+        border-radius: 24px;
+        padding: 40px 24px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 15px 35px rgba(26, 74, 54, 0.2);
+        margin-bottom: 24px;
+    }
+
+    .avatar-wrapper {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 40px;
+        font-weight: 700;
+    }
+
+    .nav-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.05);
+        overflow: hidden;
+        box-shadow: var(--soft-shadow);
+    }
+
+    .nav-link-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 18px 25px;
+        font-size: 15px;
+        color: var(--text, #333);
+        transition: var(--transition);
+        text-decoration: none;
+        border-bottom: 1px solid #f8f9f8;
+    }
+
+    .nav-link-item:hover {
+        background: #f0f7f3;
+        color: var(--forest);
+        padding-left: 35px;
+    }
+
+    .nav-link-item.active {
+        background: #f0f7f3;
+        color: var(--forest);
+        font-weight: 700;
+        border-left: 5px solid var(--forest);
+    }
+
+    /* Main Content Cards */
+    .dashboard-card {
+        background: white;
+        border-radius: 24px;
+        padding: 35px;
+        box-shadow: var(--soft-shadow);
+        border: 1px solid rgba(0,0,0,0.03);
+        margin-bottom: 30px;
+    }
+
+    .grid-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .custom-input {
+        width: 100%;
+        background: var(--input-bg);
+        border: 1.5px solid #eef2ee;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 14px;
+        transition: var(--transition);
+        outline: none;
+    }
+
+    .custom-input:focus {
+        background: white;
+        border-color: var(--forest);
+        box-shadow: 0 0 0 4px rgba(26, 74, 54, 0.05);
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        border-bottom: 1px solid #f0f2f0;
+    }
+
+    .order-item:last-child { border-bottom: none; }
+
+    .status-pill {
+        font-size: 11px;
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 991px) {
+        .profile-layout { grid-template-columns: 1fr; }
+        .sidebar-sticky { position: relative; top: 0; }
+    }
+
+    @media (max-width: 600px) {
+        .profile-container { padding: 20px 15px; }
+        .grid-inputs { grid-template-columns: 1fr; }
+        .dashboard-card { padding: 25px 20px; }
+        .order-item { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .order-item > div:last-child { text-align: left; width: 100%; display: flex; justify-content: space-between; }
+        .page-title { font-size: 32px !important; }
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-layout">
+        
+        <aside class="sidebar-sticky">
+            <div class="user-profile-header">
+                <div class="avatar-wrapper">
+                    {{ user.first_name|first|default:user.username|first|upper }}
+                </div>
+                <h2 style="font-family:var(--font-serif); font-size:24px; margin-bottom:4px;">{{ user.get_full_name|default:user.username }}</h2>
+                <p style="opacity:0.8; font-size:14px; font-weight:300;">{{ user.email }}</p>
+                <div style="margin-top:25px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); font-size:11px; text-transform:uppercase; letter-spacing:1px; opacity:0.6;">
+                    Member Since {{ user.date_joined|date:"F Y" }}
+                </div>
+            </div>
+
+            <nav class="nav-card">
+                <a href="{% url 'profile' %}" class="nav-link-item active">
+                    <i class="fas fa-user-circle"></i> My Profile
+                </a>
+                <a href="{% url 'my_orders' %}" class="nav-link-item">
+                    <i class="fas fa-shopping-bag"></i> My Orders
+                    <span style="margin-left:auto; background:var(--forest); color:white; font-size:11px; padding:2px 10px; border-radius:12px;">{{ orders|length }}</span>
+                </a>
+                <a href="{% url 'wishlist' %}" class="nav-link-item">
+                    <i class="far fa-heart"></i> My Wishlist
+                    <span style="margin-left:auto; background:var(--terracotta, #c0392b); color:white; font-size:11px; padding:2px 10px; border-radius:12px;">{{ wishlist_count }}</span>
+                </a>
+                <a href="{% url 'logout' %}" class="nav-link-item" style="color:#d9534f;">
+                    <i class="fas fa-power-off"></i> Sign Out
+                </a>
+            </nav>
+        </aside>
+
+        <main>
+            <h1 class="page-title" style="font-family:var(--font-display); font-size:48px; margin-bottom:35px; font-weight:400;">
+                My <span style="color:var(--forest); font-style:italic; font-weight:600;">Profile</span>
+            </h1>
+            
+            <div class="dashboard-card">
+                <h3 style="font-family:var(--font-serif); font-size:22px; margin-bottom:30px; display:flex; align-items:center; gap:12px;">
+                    <span style="width:30px; height:2px; background:var(--forest);"></span> Account Details
+                </h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="grid-inputs">
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; color:#888; margin-bottom:8px; letter-spacing:0.5px;">First Name</label>
+                            <input type="text" name="first_name" value="{{ user.first_name }}" class="custom-input" placeholder="Enter first name">
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; color:#888; margin-bottom:8px; letter-spacing:0.5px;">Last Name</label>
+                            <input type="text" name="last_name" value="{{ user.last_name }}" class="custom-input" placeholder="Enter last name">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:30px;">
+                        <label style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; color:#888; margin-bottom:8px; letter-spacing:0.5px;">Email Address</label>
+                        <input type="email" name="email" value="{{ user.email }}" class="custom-input" placeholder="email@example.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding:15px 35px; border-radius:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; box-shadow:0 10px 20px rgba(var(--forest-rgb), 0.2);">
+                        Update Profile
+                    </button>
+                </form>
+            </div>
+            
+            <div class="dashboard-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                    <h3 style="font-family:var(--font-serif); font-size:22px;">Recent Purchases</h3>
+                    <a href="{% url 'my_orders' %}" style="color:var(--forest); font-size:13px; font-weight:700; text-decoration:none; border-bottom:1px solid var(--forest);">View History</a>
+                </div>
+
+                {% for order in orders %}
+                <div class="order-item">
+                    <div>
+                        <p style="font-weight:700; font-size:16px; margin-bottom:4px;">Order #{{ order.order_number }}</p>
+                        <p style="color:#999; font-size:13px;">{{ order.created_at|date:"M d, Y" }} &bull; {{ order.items.count }} items</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <p style="font-weight:800; color:var(--forest); font-size:17px; margin-bottom:8px;">TZS {{ order.total|intcomma }}</p>
+                        <span class="status-pill" style="background:{% if order.status == 'delivered' %}#e6f7ef;color:#1a7a40{% elif order.status == 'cancelled' %}#fdecea;color:#c0392b{% else %}#fff8e1;color:#e67e22{% endif %};">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align:center; padding:50px 0;">
+                    <i class="fas fa-shopping-bag" style="font-size:40px; color:#eee; margin-bottom:20px; display:block;"></i>
+                    <p style="color:#888;">You haven't placed any orders yet.</p>
+                    <a href="{% url 'shop' %}" style="color:var(--forest); font-weight:700; text-decoration:none; margin-top:10px; display:inline-block;">Start Exploring →</a>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

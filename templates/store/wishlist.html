@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}My Wishlist — Pendo Essence{% endblock %}
+{% block content %}
+<div class="container" style="padding:48px 24px 80px;">
+    <h1 style="font-family:var(--font-display);font-size:40px;margin-bottom:32px;">My <em style="color:var(--forest);font-style:italic;">Wishlist</em></h1>
+    {% if items %}
+    <div class="products-grid">
+        {% for item in items %}
+        {% with product=item.product %}
+        {% include 'store/partials/product_card.html' %}
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:100px 20px;">
+        <i class="far fa-heart" style="font-size:64px;color:var(--gold-light);display:block;margin-bottom:20px;"></i>
+        <h2 style="font-family:var(--font-display);font-size:30px;margin-bottom:10px;">Your wishlist is empty</h2>
+        <p style="color:var(--text-light);margin-bottom:24px;">Save products you love to revisit later.</p>
+        <a href="{% url 'shop' %}" class="btn btn-primary btn-lg"><i class="fas fa-leaf"></i> Explore Products</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

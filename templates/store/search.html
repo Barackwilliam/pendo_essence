@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Search Results — Pendo Essence{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --nature-bg: #f9fbf9; /* Soft green-tinted natural background */
+        --forest-deep: #0d3b26;
+        --moss-green: #2a7a52;
+    }
+
+    .search-section {
+        background-color: var(--nature-bg);
+        min-height: 80vh;
+        padding: 60px 20px;
+    }
+
+    .search-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .search-title {
+        font-family: var(--font-display, 'serif');
+        font-size: clamp(32px, 5vw, 48px);
+        color: var(--forest-deep);
+        margin-bottom: 15px;
+    }
+
+    .search-query-highlight {
+        color: var(--moss-green);
+        font-style: italic;
+    }
+
+    .search-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Search Bar within Page */
+    .inline-search-form {
+        max-width: 600px;
+        margin: 0 auto 40px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .inline-search-input {
+        flex: 1;
+        padding: 14px 20px;
+        border: 2px solid #e0e8e0;
+        border-radius: 12px;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .inline-search-input:focus {
+        border-color: var(--moss-green);
+        background: white;
+    }
+
+    /* Product Grid Styling */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+    }
+
+    /* Empty State */
+    .empty-search {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 24px;
+        border: 1px dashed #ccd9cc;
+    }
+
+    .empty-search i {
+        font-size: 48px;
+        color: #d1dbd1;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+        .products-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .search-section { padding: 40px 15px; }
+    }
+</style>
+
+<div class="search-section">
+    <div class="search-container">
+        
+        <header class="search-header">
+            <h1 class="search-title">
+                Search <span class="search-query-highlight">Results</span>
+            </h1>
+            {% if q %}
+                <p style="color: #666;">Found {{ products|length }} item{{ products|length|pluralize }} for "<strong>{{ q }}</strong>"</p>
+            {% endif %}
+        </header>
+
+        <form action="{% url 'search' %}" method="GET" class="inline-search-form">
+            <input type="text" name="q" value="{{ q }}" class="inline-search-input" placeholder="Search for something else...">
+            <button type="submit" class="btn btn-primary" style="border-radius:12px; padding:0 25px;">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+
+        {% if products %}
+            <div class="products-grid">
+                {% for product in products %}
+                    {% include 'store/partials/product_card.html' %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-search">
+                <i class="fas fa-leaf"></i>
+                <h3 style="font-family: var(--font-serif); font-size: 24px; color: var(--forest-deep);">No matches found</h3>
+                <p style="color: #888; margin-bottom: 25px;">Try using different keywords or browse our full collection.</p>
+                <a href="{% url 'shop' %}" class="btn btn-primary" style="padding: 12px 30px; border-radius: 30px;">
+                    Continue Shopping
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

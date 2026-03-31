@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: pendo-essence
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn pendo_essence.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_HOST
+        value: aws-1-eu-west-1.pooler.supabase.com
+      - key: DB_PORT
+        value: "5432"
+      - key: UPLOADCARE_PUBLIC_KEY
+        sync: false
+      - key: UPLOADCARE_SECRET_KEY
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.0"

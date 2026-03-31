@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ product.name }} — Pendo Essence{% endblock %}
+{% block meta_description %}{{ product.short_description|default:product.description|truncatewords:30 }}{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div style="background:var(--cream);padding:14px 0;border-bottom:1px solid var(--border);">
+    <div class="container">
+        <nav style="font-size:13px;color:var(--text-light);display:flex;gap:8px;align-items:center;">
+            <a href="{% url 'home' %}" style="color:var(--text-light);">Home</a>
+            <span>/</span>
+            <a href="{% url 'shop' %}" style="color:var(--text-light);">Shop</a>
+            {% if product.category %}
+            <span>/</span>
+            <a href="{{ product.category.get_absolute_url }}" style="color:var(--text-light);">{{ product.category.name }}</a>
+            {% endif %}
+            <span>/</span>
+            <span style="color:var(--text);font-weight:500;">{{ product.name }}</span>
+        </nav>
+    </div>
+</div>
+
+<div class="container" style="padding-top:48px;padding-bottom:80px;">
+    
+    <!-- ══ Product Main ══ -->
+    <div class="product-main">
+        
+        <!-- Gallery -->
+        <div class="product-gallery">
+            <div class="gallery-thumbs">
+                {% if product.image %}
+                <button class="thumb active" onclick="switchImage('{{ product.image }}', this)">
+                    <img src="{{ product.image }}" alt="{{ product.name }}">
+                </button>
+                {% endif %}
+                {% if product.image2 %}
+                <button class="thumb" onclick="switchImage('{{ product.image2 }}', this)">
+                    <img src="{{ product.image2 }}" alt="{{ product.name }} 2">
+                </button>
+                {% endif %}
+                {% if product.image3 %}
+                <button class="thumb" onclick="switchImage('{{ product.image3 }}', this)">
+                    <img src="{{ product.image3 }}" alt="{{ product.name }} 3">
+                </button>
+                {% endif %}
+                {% for extra in product.extra_images.all %}
+                <button class="thumb" onclick="switchImage('{{ extra.thumb }}', this)">
+                    <img src="{{ extra.thumb }}" alt="{{ extra.alt_text }}">
+                </button>
+                {% endfor %}
+            </div>
+            <div class="gallery-main">
+                {% if product.image %}
+                <img src="{{ product.image }}" alt="{{ product.name }}" id="main-image" class="main-img">
+                {% else %}
+                <div class="no-product-img">
+                    <i class="fas fa-seedling"></i>
+                    <p>Product Image Coming Soon</p>
+                </div>
+                {% endif %}
+                
+                <!-- Badges on image -->
+                <div class="gallery-badges">
+                    {% if product.is_new_arrival %}<span class="badge badge-new">New Arrival</span>{% endif %}
+                    {% if product.discount_percentage > 0 %}<span class="badge badge-sale">{{ product.discount_percentage }}% OFF</span>{% endif %}
+                    {% if product.is_natural %}<span class="badge badge-natural">100% Natural</span>{% endif %}
+                </div>
+                
+                <!-- Zoom hint -->
+                <div class="zoom-hint"><i class="fas fa-search-plus"></i> Hover to zoom</div>
+            </div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="product-info">
+            {% if product.category %}
+            <a href="{{ product.category.get_absolute_url }}" class="product-detail-category">
+                {{ product.category.name }}
+            </a>
+            {% endif %}
+            
+            <h1 class="product-detail-name">{{ product.name }}</h1>
+            
+            {% if product.brand %}
+            <p class="product-detail-brand">by {{ product.brand }}</p>
+            {% endif %}
+            
+            <!-- Rating -->
+            {% if product.review_count > 0 %}
+            <div class="detail-rating">
+                <div class="stars-lg">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= product.average_rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </div>
+                <a href="#reviews" style="font-size:13px;color:var(--text-light);">
+                    {{ product.review_count }} review{{ product.review_count|pluralize }}
+                </a>
+            </div>
+            {% endif %}
+            
+            <!-- Price -->
+            <div class="detail-price">
+                <span class="detail-price-current">TZS {{ product.price|intcomma }}</span>
+                {% if product.compare_price %}
+                <span class="detail-price-original">TZS {{ product.compare_price|intcomma }}</span>
+                <span class="detail-price-save">Save {{ product.discount_percentage }}%</span>
+                {% endif %}
+            </div>
+            
+            <!-- Short Description -->
+            {% if product.short_description %}
+            <p class="detail-short-desc">{{ product.short_description }}</p>
+            {% endif %}
+            
+            <!-- Skin Type -->
+            {% if product.skin_type %}
+            <div class="detail-skin-type">
+                <i class="fas fa-user-circle"></i>
+                Best for: <strong>{{ product.get_skin_type_display }}</strong>
+            </div>
+            {% endif %}
+            
+            <!-- Benefits -->
+            {% if product.benefits %}
+            <div class="detail-benefits">
+                <h4>Key Benefits</h4>
+                <ul>
+                    {% for benefit in product.get_benefits_list %}
+                    <li><i class="fas fa-check"></i> {{ benefit }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- Stock Status -->
+            <div class="stock-status">
+                {% if product.is_in_stock %}
+                    {% if product.is_low_stock %}
+                    <span class="stock-badge low">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Only {{ product.stock }} left in stock!
+                    </span>
+                    {% else %}
+                    <span class="stock-badge in">
+                        <i class="fas fa-check-circle"></i>
+                        In Stock
+                    </span>
+                    {% endif %}
+                {% else %}
+                <span class="stock-badge out">
+                    <i class="fas fa-times-circle"></i>
+                    Out of Stock
+                </span>
+                {% endif %}
+            </div>
+            
+            <!-- Add to Cart -->
+            {% if product.is_in_stock %}
+            <form method="POST" action="{% url 'add_to_cart' product.pk %}" 
+                  id="add-to-cart-form"
+                  onsubmit="event.preventDefault(); addToCartAjax('{{ product.pk }}', this);">
+                {% csrf_token %}
+                <div class="cart-action">
+                    <div class="qty-selector">
+                        <button type="button" onclick="changeQty(-1)">−</button>
+                        <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" id="qty-input">
+                        <button type="button" onclick="changeQty(1)">+</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex:1;">
+                        <i class="fas fa-shopping-bag"></i> Add to Cart
+                    </button>
+                    {% if user.is_authenticated %}
+                    <button type="button" class="wishlist-btn {% if in_wishlist %}wishlisted{% endif %}"
+                            onclick="toggleWishlist('{{ product.pk }}')">
+                        <i class="{% if in_wishlist %}fas{% else %}far{% endif %} fa-heart" id="wishlist-icon"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+            {% else %}
+            <button class="btn btn-outline btn-lg btn-block" disabled style="opacity:0.5;cursor:not-allowed;margin-top:16px;">
+                Out of Stock
+            </button>
+            {% endif %}
+            
+            <!-- Share -->
+            <div class="product-share">
+                <span>Share:</span>
+                <a href="https://wa.me/?text={{ product.name }}%20at%20Pendo%20Essence%20-%20{{ request.build_absolute_uri }}" target="_blank" class="share-btn whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="share-btn facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <button onclick="copyLink()" class="share-btn copy">
+                    <i class="fas fa-link"></i>
+                </button>
+            </div>
+            
+            <!-- Trust badges -->
+            <div class="product-trust">
+                <div class="trust-badge"><i class="fas fa-leaf"></i> Natural</div>
+                <div class="trust-badge"><i class="fas fa-shield-alt"></i> Authentic</div>
+                <div class="trust-badge"><i class="fas fa-truck"></i> Fast Delivery</div>
+                <div class="trust-badge"><i class="fas fa-undo"></i> Easy Returns</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ══ Product Details Tabs ══ -->
+    <div class="product-tabs" style="margin-top:64px;">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('description', this)">Description</button>
+            {% if product.how_to_use %}
+            <button class="tab-btn" onclick="switchTab('how-to-use', this)">How to Use</button>
+            {% endif %}
+            {% if product.ingredients %}
+            <button class="tab-btn" onclick="switchTab('ingredients', this)">Ingredients</button>
+            {% endif %}
+            <button class="tab-btn" onclick="switchTab('reviews', this)">
+                Reviews ({{ product.review_count }})
+            </button>
+        </div>
+        
+        <div class="tab-content active" id="tab-description">
+            <div class="tab-inner">
+                {{ product.description|linebreaks }}
+            </div>
+        </div>
+        
+        {% if product.how_to_use %}
+        <div class="tab-content" id="tab-how-to-use">
+            <div class="tab-inner">
+                <h3>How to Use {{ product.name }}</h3>
+                {{ product.how_to_use|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if product.ingredients %}
+        <div class="tab-content" id="tab-ingredients">
+            <div class="tab-inner">
+                <h3>Full Ingredients List</h3>
+                <p style="font-size:13px;color:var(--text-light);line-height:1.8;">{{ product.ingredients }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="tab-content" id="tab-reviews">
+            <div class="tab-inner" id="reviews">
+                <!-- Rating Summary -->
+                {% if product.review_count > 0 %}
+                <div class="rating-summary">
+                    <div class="rating-big">
+                        <span class="big-num">{{ product.average_rating }}</span>
+                        <div class="big-stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= product.average_rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                        <span style="font-size:13px;color:var(--text-light);">{{ product.review_count }} reviews</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Reviews List -->
+                <div class="reviews-list">
+                    {% for review in reviews %}
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-avatar">
+                                {{ review.user.first_name|first|upper }}{{ review.user.last_name|first|upper }}
+                            </div>
+                            <div>
+                                <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+                                <div class="review-stars">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                    {% endfor %}
+                                    <span style="font-size:12px;color:var(--text-light);margin-left:6px;">{{ review.created_at|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                            {% if review.is_verified_purchase %}
+                            <span class="verified-badge">✓ Verified Purchase</span>
+                            {% endif %}
+                        </div>
+                        {% if review.title %}
+                        <h4 style="font-size:15px;margin-bottom:8px;">{{ review.title }}</h4>
+                        {% endif %}
+                        <p style="font-size:14px;color:var(--text);line-height:1.7;">{{ review.comment }}</p>
+                    </div>
+                    {% empty %}
+                    <div style="text-align:center;padding:40px;color:var(--text-light);">
+                        <i class="far fa-star" style="font-size:36px;display:block;margin-bottom:12px;"></i>
+                        <p>No reviews yet. Be the first to review this product!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Write Review -->
+                {% if user.is_authenticated and not user_review %}
+                <div class="write-review" id="write-review">
+                    <h3>Write a Review</h3>
+                    <form method="POST" action="{% url 'add_review' product.pk %}">
+                        {% csrf_token %}
+                        <div class="star-rating-input">
+                            <label>Rating *</label>
+                            <div class="star-input">
+                                {% for i in "54321" %}
+                                <input type="radio" name="rating" value="{{ i }}" id="star-{{ i }}" required>
+                                <label for="star-{{ i }}">★</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Review Title</label>
+                            <input type="text" name="title" placeholder="Summarize your experience">
+                        </div>
+                        <div class="form-group">
+                            <label>Your Review *</label>
+                            <textarea name="comment" rows="4" required placeholder="Tell others about your experience with this product..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </form>
+                </div>
+                {% elif not user.is_authenticated %}
+                <div style="background:var(--cream);border-radius:var(--radius);padding:24px;text-align:center;margin-top:24px;">
+                    <p><a href="{% url 'login' %}" style="color:var(--forest);font-weight:600;">Login</a> to write a review.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- ══ Related Products ══ -->
+    {% if related %}
+    <div style="margin-top:80px;">
+        <div class="section-header">
+            <p class="section-eyebrow">You May Also Like</p>
+            <h2 class="section-title">Related <em>Products</em></h2>
+        </div>
+        <div class="products-grid">
+            {% for prod in related %}
+            {% with product=prod %}
+            {% include 'store/partials/product_card.html' %}
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.product-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: flex-start;
+}
+.product-gallery { display: flex; gap: 14px; }
+.gallery-thumbs { display: flex; flex-direction: column; gap: 10px; }
+.thumb {
+    width: 72px; height: 72px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    padding: 0;
+    transition: var(--transition);
+    background: var(--cream);
+}
+.thumb.active, .thumb:hover { border-color: var(--forest); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-main {
+    flex: 1;
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--cream);
+    cursor: zoom-in;
+}
+.main-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.gallery-main:hover .main-img { transform: scale(1.05); }
+.no-product-img {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--gold);
+    font-size: 64px;
+    gap: 16px;
+}
+.no-product-img p { font-size: 14px; color: var(--text-light); }
+.gallery-badges { position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 6px; }
+.zoom-hint {
+    position: absolute;
+    bottom: 14px; right: 14px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: var(--transition);
+}
+.gallery-main:hover .zoom-hint { opacity: 1; }
+
+/* Product Info */
+.product-detail-category {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin-bottom: 12px;
+    display: block;
+}
+.product-detail-name {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 700;
+    color: var(--charcoal);
+    line-height: 1.15;
+    margin-bottom: 8px;
+}
+.product-detail-brand { font-size: 14px; color: var(--text-light); margin-bottom: 16px; }
+.detail-rating {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.stars-lg { color: var(--gold); font-size: 20px; letter-spacing: 2px; }
+.detail-price { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+.detail-price-current {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--forest);
+}
+.detail-price-original { font-size: 18px; color: var(--text-light); text-decoration: line-through; }
+.detail-price-save {
+    background: #fef0ec;
+    color: var(--terracotta);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+.detail-short-desc { font-size: 15px; color: var(--text); line-height: 1.8; margin-bottom: 20px; }
+.detail-skin-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f8f5;
+    color: var(--forest);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 30px;
+    margin-bottom: 20px;
+}
+.detail-benefits { margin-bottom: 24px; }
+.detail-benefits h4 { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-light); margin-bottom: 12px; }
+.detail-benefits ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.detail-benefits li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
+.detail-benefits li i { color: var(--forest); }
+.stock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+.stock-badge.in { background: #e6f7ef; color: #1a7a40; }
+.stock-badge.low { background: #fff8e1; color: #e67e22; }
+.stock-badge.out { background: #fdecea; color: #c0392b; }
+.cart-action { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.qty-selector {
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.qty-selector button {
+    background: none; border: none;
+    width: 44px; height: 52px;
+    font-size: 20px; cursor: pointer;
+    color: var(--text);
+    transition: var(--transition);
+}
+.qty-selector button:hover { background: var(--cream); }
+.qty-selector input {
+    width: 54px; text-align: center;
+    border: none; border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+    font-size: 16px; font-weight: 600;
+    outline: none; height: 52px;
+    font-family: var(--font-sans);
+}
+.wishlist-btn {
+    width: 52px; height: 52px;
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--text-light);
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+.wishlist-btn:hover, .wishlist-btn.wishlisted { border-color: var(--terracotta); color: var(--terracotta); }
+.product-share {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-light);
+}
+.share-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.share-btn.whatsapp { background: #25D366; }
+.share-btn.facebook { background: #1877F2; }
+.share-btn.copy { background: var(--text-light); }
+.share-btn:hover { transform: scale(1.1); }
+.product-trust {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--forest);
+    background: #f0f8f5;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+/* Tabs */
+.product-tabs { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+.tab-nav { display: flex; background: var(--cream); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab-btn {
+    padding: 16px 28px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+    margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--forest); }
+.tab-btn.active { color: var(--forest); border-bottom-color: var(--forest); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.tab-inner { padding: 36px; max-width: 800px; }
+.tab-inner h3 { font-family: var(--font-serif); font-size: 22px; margin-bottom: 16px; }
+
+/* Reviews */
+.rating-summary { display: flex; align-items: center; gap: 32px; padding: 24px 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+.rating-big { text-align: center; }
+.big-num { font-family: var(--font-serif); font-size: 56px; font-weight: 600; color: var(--charcoal); line-height: 1; display: block; }
+.big-stars { font-size: 24px; color: var(--gold); }
+.reviews-list { display: flex; flex-direction: column; gap: 24px; }
+.review-item { padding: 24px; background: var(--cream); border-radius: var(--radius); }
+.review-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.reviewer-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--forest), var(--forest-light));
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.review-stars { font-size: 16px; color: var(--gold); margin-top: 4px; }
+.verified-badge { margin-left: auto; font-size: 11px; color: var(--forest); font-weight: 600; background: #e6f7ef; padding: 3px 8px; border-radius: 4px; }
+.write-review { margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--border); }
+.write-review h3 { font-family: var(--font-serif); font-size: 22px; margin-bottom: 24px; }
+.star-rating-input { margin-bottom: 20px; }
+.star-input { display: flex; flex-direction: row-reverse; gap: 4px; }
+.star-input input { display: none; }
+.star-input label { font-size: 32px; color: var(--border); cursor: pointer; transition: var(--transition); }
+.star-input input:checked ~ label, .star-input label:hover, .star-input label:hover ~ label { color: var(--gold); }
+
+@media (max-width: 900px) {
+    .product-main { grid-template-columns: 1fr; }
+    .gallery-thumbs { flex-direction: row; }
+    .thumb { width: 60px; height: 60px; }
+    .cart-action { flex-wrap: wrap; }
+}
+</style>
+
+<script>
+function switchImage(url, btn) {
+    document.getElementById('main-image').src = url;
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function changeQty(delta) {
+    const input = document.getElementById('qty-input');
+    const newVal = Math.max(1, parseInt(input.value) + delta);
+    input.value = newVal;
+}
+
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    btn.classList.add('active');
+}
+
+function toggleWishlist(productId) {
+    fetch(`/wishlist/toggle/${productId}/`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        const icon = document.getElementById('wishlist-icon');
+        const btn = icon.parentElement;
+        if (data.added) {
+            icon.className = 'fas fa-heart';
+            btn.classList.add('wishlisted');
+            showToast('Added to wishlist! ♥', 'success');
+        } else {
+            icon.className = 'far fa-heart';
+            btn.classList.remove('wishlisted');
+            showToast('Removed from wishlist', 'success');
+        }
+    });
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href);
+    showToast('Link copied to clipboard!', 'success');
+}
+</script>
+{% endblock %}

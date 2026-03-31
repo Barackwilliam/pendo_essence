@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ category.name }} — Pendo Essence{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,var(--forest),var(--forest-mid));padding:60px 0;">
+    <div class="container">
+        <p style="color:rgba(255,255,255,0.6);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Category</p>
+        <h1 style="font-family:var(--font-display);font-size:clamp(36px,5vw,60px);color:white;line-height:1.1;">{{ category.name }}</h1>
+        {% if category.description %}<p style="color:rgba(255,255,255,0.75);font-size:16px;margin-top:12px;max-width:560px;">{{ category.description }}</p>{% endif %}
+    </div>
+</div>
+<div class="container" style="padding:48px 24px 80px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
+        <p style="color:var(--text-light);font-size:14px;">{{ products.paginator.count }} products</p>
+        <select onchange="window.location.href=this.value" style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 14px;font-family:var(--font-sans);font-size:13px;">
+            <option value="?sort=newest">Newest</option>
+            <option value="?sort=popular">Popular</option>
+            <option value="?sort=price_low">Price: Low → High</option>
+            <option value="?sort=price_high">Price: High → Low</option>
+        </select>
+    </div>
+    {% if products %}
+    <div class="products-grid">
+        {% for product in products %}
+        {% include 'store/partials/product_card.html' %}
+        {% endfor %}
+    </div>
+    {% if products.has_other_pages %}
+    <div class="pagination" style="display:flex;justify-content:center;gap:8px;margin-top:48px;">
+        {% if products.has_previous %}<a href="?page={{ products.previous_page_number }}" class="page-btn"><i class="fas fa-chevron-left"></i></a>{% endif %}
+        {% for num in products.paginator.page_range %}{% if products.number == num %}<span class="page-btn active">{{ num }}</span>{% elif num > products.number|add:'-3' and num < products.number|add:'3' %}<a href="?page={{ num }}" class="page-btn">{{ num }}</a>{% endif %}{% endfor %}
+        {% if products.has_next %}<a href="?page={{ products.next_page_number }}" class="page-btn"><i class="fas fa-chevron-right"></i></a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="text-align:center;padding:80px;color:var(--text-light);">
+        <i class="fas fa-box-open" style="font-size:48px;display:block;margin-bottom:20px;"></i>
+        <p>No products in this category yet.</p>
+        <a href="{% url 'shop' %}" class="btn btn-outline" style="margin-top:16px;">Browse All →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
