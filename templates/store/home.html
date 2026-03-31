@@ -521,7 +521,7 @@ img{display:block;max-width:100%}
   <div class="cat-grid">
     {% for category in categories %}
     <a href="{% url 'category_detail' category.slug %}" class="cat-card reveal d{{ forloop.counter }}">
-      {% if category.image %}<img class="cat-card__img" src="{{ category.get_image_preview_url }}" alt="{{ category.name }}" loading="lazy">{% else %}<div style="position:absolute;inset:0;background:linear-gradient(135deg,var(--canopy),var(--forest))"></div>{% endif %}
+      {% if category.image %}<img class="cat-card__img" src="{{ category.image }}" alt="{{ category.name }}" loading="lazy">{% else %}<div style="position:absolute;inset:0;background:linear-gradient(135deg,var(--canopy),var(--forest))"></div>{% endif %}
       <div class="cat-card__gr"></div>
       <div class="cat-card__ic"><i class="fas {{ category.icon }}"></i></div>
       <div class="cat-card__bd">
