@@ -1220,7 +1220,7 @@
                 </div>
                 <div class="f-contact-item">
                     <i class="fas fa-envelope"></i>
-                    <span>{% if site_settings.email %}{{ site_settings.email }}{% else %}hello@pendoessence.co.tz{% endif %}</span>
+                    <span>{% if site_settings.email %}{{ site_settings.email }}{% else %}operations@more.co.tz{% endif %}</span>
                 </div>
                 <div class="f-contact-item">
                     <i class="fas fa-map-marker-alt"></i>
@@ -1239,15 +1239,11 @@
         </div>
 
         <div class="footer-bar">
-            <span>© 2026 Pendo Essence Tanzania. All rights reserved.</span>
-            <div class="pay-chips">
-                <span class="pay-chip">M-PESA</span>
-                <span class="pay-chip">TIGO</span>
-                <span class="pay-chip">AIRTEL</span>
-                <span class="pay-chip">HALO</span>
-                <span class="pay-chip">COD</span>
-            </div>
-        </div>
+    <span>© 2026 Pendo Essence Tanzania. All rights reserved.</span>
+    <a href="https://www.jamiitek.com" target="_blank" rel="noopener noreferrer" class="jamiitek-credit">
+        Designed by <strong>JamiiTek</strong>
+    </a>
+</div>
     </div>
 </footer>
 
@@ -1352,6 +1348,26 @@ function getCookie(name) {
     return '';
 }
 </script>
+<style>
+    .jamiitek-credit {
+    color: rgba(255,255,255,.35);
+    font-size: 12px;
+    font-family: var(--font-head);
+    letter-spacing: .5px;
+    transition: color .25s;
+    text-decoration: none;
+}
+.jamiitek-credit:hover {
+    color: var(--g300);
+}
+.jamiitek-credit strong {
+    color: rgba(255,255,255,.55);
+    font-weight: 700;
+}
+.jamiitek-credit:hover strong {
+    color: var(--g200);
+}
+</style>
 
 {% block extra_js %}{% endblock %}
 </body>
