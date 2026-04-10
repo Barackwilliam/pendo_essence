@@ -1035,6 +1035,79 @@
         .product-card-foot { padding: 0 13px 13px; }
     }
 
+    /* ─── LOGO IMAGE ──────────────────────────────────── */
+    .nav-logo-img {
+        height: 48px;
+        width: auto;
+        display: block;
+        margin: 0 auto;
+        object-fit: contain;
+        /* Logo has black bg — invert so it looks clean on light nav */
+        filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(600%) hue-rotate(110deg) brightness(0.6);
+        transition: filter .3s var(--ease), transform .3s var(--ease);
+    }
+    .logo:hover .nav-logo-img {
+        filter: brightness(0) saturate(100%) invert(27%) sepia(70%) saturate(500%) hue-rotate(115deg) brightness(0.75);
+        transform: scale(1.03);
+    }
+    .mob-logo-img {
+        height: 40px;
+        width: auto;
+        object-fit: contain;
+        filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(600%) hue-rotate(110deg) brightness(0.6);
+    }
+    .f-logo-wrap { display: inline-block; margin-bottom: 16px; }
+    .f-logo-img {
+        height: 56px;
+        width: auto;
+        object-fit: contain;
+        /* On dark footer background, keep the green logo visible as-is */
+        filter: brightness(0) invert(1);
+        opacity: .85;
+        transition: opacity .3s;
+    }
+    .f-logo-wrap:hover .f-logo-img { opacity: 1; }
+
+    /* ─── SOCIAL MEDIA BRANDED BUTTONS ───────────────── */
+    .f-soc-btn {
+        position: relative;
+        overflow: hidden;
+    }
+    .f-soc-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        opacity: 0;
+        transition: opacity .3s var(--ease);
+    }
+    .f-soc-ig::before { background: radial-gradient(circle at 30% 110%, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+    .f-soc-fb::before { background: #1877f2; }
+    .f-soc-tt::before { background: linear-gradient(135deg, #010101 0%, #69C9D0 50%, #EE1D52 100%); }
+    .f-soc-wa::before { background: #25D366; }
+    .f-soc-btn:hover::before { opacity: 1; }
+    .f-soc-btn:hover { color: white; border-color: transparent; transform: translateY(-3px) scale(1.1); }
+    .f-soc-btn i { position: relative; z-index: 1; }
+
+    /* Floating social bar on announcement bar */
+    .bar-social {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .bar-soc-link {
+        color: rgba(255,255,255,.5);
+        font-size: 12px;
+        transition: color .2s, transform .2s;
+        line-height: 1;
+    }
+    .bar-soc-link:hover { color: white; transform: scale(1.2); }
+    @media (max-width: 768px) { .bar-social { display: none; } }
+
     {% block extra_css %}{% endblock %}
     </style>
 </head>
@@ -1047,6 +1120,12 @@
     <span style="font-family:var(--font-head);font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--g100);">100% Natural &amp; Cruelty-Free</span>
     <span class="bar-sep" style="color:var(--g400);font-size:10px;">·</span>
     <a href="{% url 'skin_quiz' %}" style="font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--g200);border-bottom:1px solid var(--g300);">Take our free Skin Quiz →</a>
+    <!-- Social icons floating right in bar -->
+    <div class="bar-social">
+        <a href="https://www.instagram.com/pendoessence/" class="bar-soc-link" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://www.facebook.com/profile.php?id=61576508087031" class="bar-soc-link" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://www.tiktok.com/@pendo_kids" class="bar-soc-link" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>
+    </div>
 </div>
 
 <!-- Navbar -->
@@ -1063,8 +1142,7 @@
 
         <!-- Logo -->
         <a href="{% url 'home' %}" class="logo">
-            <div class="logo-mark">Pendo <em>Essence</em></div>
-            <div class="logo-tag">Stay Natural · Stay Beautiful</div>
+            <img src="{% static 'images/pendoessence_logo.png' %}" alt="Pendo Essence" class="nav-logo-img">
         </a>
 
         <!-- Right icons -->
@@ -1108,7 +1186,7 @@
 <div class="mob-veil" id="mob-veil" onclick="toggleMob()"></div>
 <div class="mob-menu" id="mob-menu">
     <div class="mob-head">
-        <div class="logo-mark">Pendo <em style="color:var(--g500);">Essence</em></div>
+        <img src="{% static 'images/pendoessence_logo.png' %}" alt="Pendo Essence" class="mob-logo-img">
         <button class="mob-close" onclick="toggleMob()">✕</button>
     </div>
     <ul class="mob-links">
@@ -1159,25 +1237,15 @@
 
             <!-- Brand -->
             <div>
-                <div class="f-brand-name">Pendo <em>Essence</em></div>
+                <a href="{% url 'home' %}" class="f-logo-wrap">
+                    <img src="{% static 'images/pendoessence_logo.png' %}" alt="Pendo Essence" class="f-logo-img">
+                </a>
                 <p class="f-desc">Revolutionising African skincare with 100% natural, plant-powered products crafted for your unique skin. Beauty that starts from the inside out.</p>
                 <div class="f-social">
-                    {% if site_settings.instagram %}
-                    <a href="{{ site_settings.instagram }}" class="f-soc-btn" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                    {% else %}
-                    <a href="#" class="f-soc-btn" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                    {% endif %}
-                    {% if site_settings.facebook %}
-                    <a href="{{ site_settings.facebook }}" class="f-soc-btn" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    {% else %}
-                    <a href="#" class="f-soc-btn" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    {% endif %}
-                    {% if site_settings.tiktok %}
-                    <a href="{{ site_settings.tiktok }}" class="f-soc-btn" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
-                    {% else %}
-                    <a href="#" class="f-soc-btn" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
-                    {% endif %}
-                    <a href="https://wa.me/255762229222" class="f-soc-btn" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.instagram.com/pendoessence/" class="f-soc-btn f-soc-ig" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/profile.php?id=61576508087031" class="f-soc-btn f-soc-fb" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.tiktok.com/@pendo_kids" class="f-soc-btn f-soc-tt" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://wa.me/255762229222" class="f-soc-btn f-soc-wa" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
 
