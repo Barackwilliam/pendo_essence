@@ -2,6 +2,8 @@
 Pendo Essence - Django Settings
 Render.com deployment ready
 """
+# render Email: info@nalalahouse.com
+
 import os
 import dj_database_url
 from pathlib import Path
